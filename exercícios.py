@@ -2,9 +2,10 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
+# Configuração da página do Streamlit
 st.set_page_config(
     page_title="Automatizador de Painéis",
-    page_icon="bar_chart:",
+    page_icon=":bar_chart:",
     layout="wide"
 )
 
@@ -20,7 +21,7 @@ st.title("Visualizador de Planilhas Excel")
 # Upload do arquivo
 with st.sidebar:
     st.header("Configuration")
-    uploaded_file = st.sidebar.file_uploader("Escolha um arquivo Excel", type=["xlsx"])
+    uploaded_file = st.file_uploader("Escolha um arquivo Excel", type=["xlsx"])
 
 if uploaded_file is not None:
     # Carregar o DataFrame
@@ -30,9 +31,9 @@ if uploaded_file is not None:
     st.write("Conteúdo do DataFrame:")
     st.dataframe(df)
 
-    # Exibir informações adicionais sobre o DataFrame
-    st.write("Informações do DataFrame:")
-    st.write(df.info())
+    # Mostrar os nomes das colunas
+    st.write("Colunas disponíveis no DataFrame:")
+    st.write(df.columns)
 
     # Separar as seções por linhas
     st.write("---")  # Linha de separação
@@ -53,18 +54,19 @@ if uploaded_file is not None:
             </h3>
         """, unsafe_allow_html=True)
 
-        status_counts_by_responsible = df[df['Adimplência (última emissão)'].isin(['Solicitado', 'Inadimplente'])]
-        status_counts_by_responsible = status_counts_by_responsible.groupby(
-            ['RESPONSÁVEL', 'Adimplência (última emissão)']).size().unstack(fill_value=0).reset_index()
-
-        # Ajuste para garantir a exibição sem coluna extra e centralizar
-        styled_status_counts = status_counts_by_responsible.style.set_properties(
-            **{'text-align': 'center', 'width': '150px'}
-        ).set_table_styles(
-            [{'selector': 'thead th', 'props': 'text-align: center;'}]
-        )
-
-        st.write(styled_status_counts, use_container_width=True)
+        # Verificar se a coluna existe
+        if 'Adimplência (última emissão)' in df.columns:
+            status_counts_by_responsible = df[df['Adimplência (última emissão)'].isin(['Solicitado', 'Inadimplente'])]
+            status_counts_by_responsible = status_counts_by_responsible.groupby(
+                ['RESPONSÁVEL', 'Adimplência (última emissão)']).size().unstack(fill_value=0).reset_index()
+            styled_status_counts = status_counts_by_responsible.style.set_properties(
+                **{'text-align': 'center', 'width': '150px'}
+            ).set_table_styles(
+                [{'selector': 'thead th', 'props': 'text-align: center;'}]
+            )
+            st.write(styled_status_counts, use_container_width=True)
+        else:
+            st.error("Coluna 'Adimplência (última emissão)' não encontrada no arquivo.")
 
     with col2:
         st.markdown("""
@@ -114,10 +116,11 @@ if uploaded_file is not None:
         """, unsafe_allow_html=True)
 
         # Filtrar processos inadimplentes
-        inadimplentes_df = df[df['Adimplência (última emissão)'] == 'Inadimplente'][['Nº PROCESSO', 'TÍTULO DO PROJETO', 'SANFOM']]
-
-        # Exibir o DataFrame com os processos inadimplentes
-        st.write(inadimplentes_df, use_container_width=True)
+        if 'Adimplência (última emissão)' in df.columns:
+            inadimplentes_df = df[df['Adimplência (última emissão)'] == 'Inadimplente'][['Nº PROCESSO', 'TÍTULO DO PROJETO', 'SANFOM']]
+            st.write(inadimplentes_df, use_container_width=True)
+        else:
+            st.error("Coluna 'Adimplência (última emissão)' não encontrada no arquivo.")
 
     with col2:
         st.markdown("""
@@ -131,8 +134,6 @@ if uploaded_file is not None:
         today = datetime.today()
         vencidas_df = df[(df['Vigência Adimplência'].notna()) & (df['Vigência Adimplência'] < today)]
         vencidas_df = vencidas_df[['Nº PROCESSO', 'TÍTULO DO PROJETO', 'SANFOM']]
-
-        # Exibir o DataFrame com as adimplências vencidas
         st.write(vencidas_df, use_container_width=True)
 
     st.write("---")  # Linha de separação
