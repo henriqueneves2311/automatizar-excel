@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-from pyxlsb import open_workbook
 
 st.set_page_config(
     page_title="Automatizador de Painéis",
@@ -10,18 +9,8 @@ st.set_page_config(
 
 # Função para carregar o arquivo Excel
 def load_excel(file, file_type):
-    if file_type == 'xlsx':
         # Ler o arquivo Excel (.xlsx) em um DataFrame
-        df = pd.read_excel(file, engine='openpyxl', skiprows=4)
-    elif file_type == 'xlsb':
-        # Ler o arquivo Excel (.xlsb) em um DataFrame
-        with open_workbook(file) as wb:
-            # Lê a primeira planilha do arquivo .xlsb
-            sheet = wb.sheets[0]
-            data = []
-            for row in sheet.rows():
-                data.append([item.v for item in row])
-            df = pd.DataFrame(data[1:], columns=data[0])
+    df = pd.read_excel(file, engine='openpyxl', skiprows=4)
     return df
 
 # Interface do usuário
@@ -30,7 +19,7 @@ st.title("Visualizador de Planilhas Excel")
 # Upload do arquivo
 with st.sidebar:
     st.header("Configuration")
-    uploaded_file = st.sidebar.file_uploader("Escolha um arquivo Excel", type=["xlsx", "xlsb"])
+    uploaded_file = st.sidebar.file_uploader("Escolha um arquivo Excel", type=["xlsx"])
 
 if uploaded_file is not None:
     # Obter o tipo do arquivo
