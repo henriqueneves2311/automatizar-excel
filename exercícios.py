@@ -31,10 +31,6 @@ if uploaded_file is not None:
     st.write("Conteúdo do DataFrame:")
     st.dataframe(df)
 
-    # Mostrar os nomes das colunas
-    st.write("Colunas disponíveis no DataFrame:")
-    st.write(df.columns)
-
     # Separar as seções por linhas
     st.write("---")  # Linha de separação
 
@@ -132,7 +128,11 @@ if uploaded_file is not None:
         # Converter a coluna 'Vigência Adimplência' para datetime e filtrar
         df['Vigência Adimplência'] = pd.to_datetime(df['Vigência Adimplência'], errors='coerce')
         today = datetime.today()
-        vencidas_df = df[(df['Vigência Adimplência'].notna()) & (df['Vigência Adimplência'] < today)]
+
+        # Filtrar os processos com adimplência vencida e sem analista
+        vencidas_df = df[(df['Vigência Adimplência'].notna()) &
+                         (df['Vigência Adimplência'] < today) &
+                         (df['ANALISTA'].isna())]
         vencidas_df = vencidas_df[['Nº PROCESSO', 'TÍTULO DO PROJETO', 'SANFOM']]
         st.write(vencidas_df, use_container_width=True)
 
